@@ -17,7 +17,9 @@ GROUP BY candidate_id
 HAVING count(skill) > 2
 ORDER BY candidate_id ASC
 --EX6
-SELECT user_id, date_part('day', max(post_date) - min(post_date)) as days_between FROM posts
+SELECT user_id, date_part('day', max(post_date) - min(post_date)) as days_between FROM posts 
+-- hoặc DATE(max(post_date)) - DATE(min(post_date)) as days_between
+    -- post_date >= '2021-01-01 AND post_date < '2022-01-01'
 WHERE date_part('year', post_date) = 2021
 GROUP BY user_id
 HAVING COUNT(post_id) >=2
@@ -27,7 +29,7 @@ GROUP BY card_name
 HAVING count(issue_month) >2
 ORDER BY max(issued_amount)-min(issued_amount) DESC
 --EX8
-SELECT manufacturer, COUNT(drug) AS count_drug, sum(cogs-total_sales) AS total_loss FROM pharmacy_sales
+SELECT manufacturer, COUNT(drug) AS count_drug, abs(sum(cogs-total_sales)) AS total_loss FROM pharmacy_sales
 WHERE cogs > total_sales
 GROUP BY manufacturer
 ORDER BY total_loss DESC
