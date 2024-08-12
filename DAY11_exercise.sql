@@ -70,4 +70,93 @@ ON p.page_id = k.page_id
 WHERE liked_date is null
 ORDER BY p.page_id
 
---
+--MID
+--Q1
+select distinct replacement_cost
+from public.film
+ORDER BY replacement_cost
+
+--Q2
+SELECT 
+    SUM(CASE 
+        WHEN replacement_cost BETWEEN 9.99 AND 19.99 THEN 1 
+    END) AS low,
+	
+    SUM(CASE 
+        WHEN replacement_cost BETWEEN 20.00 AND 24.99 THEN 1 
+    END) AS medium,
+	
+    SUM(CASE 
+        WHEN replacement_cost BETWEEN 25.00 AND 29.99 THEN 1 
+    END) AS high
+	
+FROM public.film;
+
+--Q3
+select 
+	f.title, f.length, c.name
+from public.film as f
+inner join public.film_category as fc
+on f.film_id = fc.film_id
+inner join public.category as c
+on c.category_id = fc.category_id
+where name in ('Drama','Sports')
+order by f.length desc
+
+--Q4
+select 
+	COUNT(f.title) || ' titles' as count_titles , c.name
+from public.film as f
+inner join public.film_category as fc
+on f.film_id = fc.film_id
+inner join public.category as c
+on c.category_id = fc.category_id
+GROUP BY c.name
+order by count_titles desc
+
+--Q5
+SELECT 
+	a.first_name, a.last_name, count(f.film_id) || ' movies' as count_films
+FROM public.film AS f
+INNER JOIN public.film_actor AS fa
+ON f.film_id = fa.film_id
+INNER JOIN public.actor AS a
+ON a.actor_id = fa.actor_id
+group by a.first_name, a.last_name
+order by count_films desc
+
+--Q6
+SELECT count(a.address)
+FROM public.address AS a
+LEFT JOIN public.customer AS c
+ON c.address_id = a.address_id
+WHERE c.customer_id is null
+
+--Q7
+select 
+	ci.city, SUM(p.amount) as total_amount
+from public.payment as p
+inner join public.customer as c
+	on p.customer_id = c.customer_id
+inner join public.address as a
+	on a.address_id = c.address_id
+inner join public.city as ci
+	on ci.city_id = a.city_id
+GROUP BY ci.city 
+ORDER BY total_amount DESC
+
+--Q8
+select 
+	concat(ci.city,', ',co.country) as infor,
+	sum(p.amount) as total_amount
+from public.payment as p
+inner join public.customer as c
+	on p.customer_id = c.customer_id
+inner join public.address as a
+	on a.address_id = c.address_id
+inner join public.city as ci
+	on ci.city_id = a.city_id
+inner join public.country as co
+	on co.country_id = ci.country_id
+GROUP BY concat(ci.city,', ',co.country)
+order by total_amount
