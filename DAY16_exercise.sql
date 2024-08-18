@@ -37,7 +37,6 @@ ON f.player_id = n.player_id;
 
 --EX3
 
-
 --ex4
 
 --ex5
@@ -62,3 +61,20 @@ where rank <=3
 order by Department
 
 --ex7
+
+
+--ex8
+SELECT 
+    p.product_id, 
+    COALESCE(A.new_price, 10) AS price
+FROM Products p
+LEFT JOIN 
+    (SELECT 
+         product_id, 
+         new_price
+     FROM Products
+     WHERE change_date <= '2019-08-16'
+     ORDER BY change_date DESC
+    ) a 
+ON p.product_id = A.product_id
+GROUP BY p.product_id;
