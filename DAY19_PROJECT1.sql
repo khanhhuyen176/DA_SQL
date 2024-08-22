@@ -93,6 +93,36 @@ WHERE ordernumber IN (
     SELECT ordernumber
     FROM OUTERLIER)
 
+-- 6) Sau khi làm sạch dữ liệu, hãy lưu vào bảng mới  tên là SALES_DATASET_RFM_PRJ_CLEAN
+CREATE TABLE public.sales_dataset_rfm_prj_clean AS 
+TABLE public.sales_dataset_rfm_prj WITH NO DATA;
+
+WITH filter_data AS (
+    SELECT
+        ROW_NUMBER() OVER (PARTITION BY ordernumber ORDER BY quantityordered DESC) AS STT,
+        *
+    FROM public.sales_dataset_rfm_prj
+)
+INSERT INTO public.sales_dataset_rfm_prj_clean
+	(ordernumber,
+     quantityordered,
+     priceeach,
+	 orderlinenumber,
+	 sales,
+	 orderdate)
+SELECT
+    ordernumber,
+    quantityordered,
+    priceeach,
+	orderlinenumber,
+	sales,
+	orderdate
+FROM filter_data
+WHERE STT = 1;
+--??làm sao để có thể insert hết data bảng ban đầu vào bảng clean mà không phải liệt kê từng cột với trường hợp bảng có quá nhiều trường thì sẽ không khả thi với cách liệt kê??
+--??làm sao để biết cần xóa lặp lại ở cột nào, gom nhóm theo đâu??
+
+
 
 
 
