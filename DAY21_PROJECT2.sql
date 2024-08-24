@@ -143,5 +143,62 @@ ORDER BY
     dates, 
     product_categories;
 
+--III.1
+
+WITH x AS (
+    SELECT 
+        FORMAT_TIMESTAMP('%Y-%m', c.created_at) AS Month,
+        FORMAT_TIMESTAMP('%Y', c.created_at) AS Year,
+        a.category AS Product_category,
+        COUNT(b.product_id) AS quantity_sold, -- Tổng số đơn hàng mỗi category ở từng tháng
+        SUM(b.sale_price) AS total_sales, -- Tổng doanh thu mỗi category ở từng tháng
+        SUM(a.cost) AS total_cost1 -- Tổng chi phí mỗi category ở từng tháng
+    FROM 
+        bigquery-public-data.thelook_ecommerce.products a
+    JOIN 
+        bigquery-public-data.thelook_ecommerce.order_items b
+        ON a.id = b.product_id
+    JOIN 
+        bigquery-public-data.thelook_ecommerce.orders c
+        ON b.order_id = c.order_id
+    WHERE 
+        b.status = 'Complete'
+    GROUP BY 1, 2, 3
+    ORDER BY Month, Year
+),
+
+xx AS (
+    SELECT 
+        Month,
+        Year,
+        Product_category,
+        SUM(quantity_sold) AS TPO, -- Tổng số đơn hàng mỗi tháng
+        SUM(total_sales) AS TPV, -- Tổng doanh thu mỗi tháng
+        SUM(total_cost1) AS Total_cost -- Tổng chi phí mỗi tháng
+    FROM 
+        x
+    GROUP BY 1, 2,3
+    ORDER BY Year, Month
+)
+
+SELECT
+    Month,
+    Year,
+    Product_category,
+    TPV,
+    TPO,
+    -- Tăng trưởng doanh thu 
+    round((TPV - LAG(TPV) OVER (ORDER BY Year, Month)) / LAG(TPV) OVER (ORDER BY Year, Month) * 100.00,2) || '%' AS Revenue_growth, 
+    -- Tăng trưởng số đơn hàng
+    round((TPO - LAG(TPO) OVER (ORDER BY Year, Month)) / LAG(TPO) OVER (ORDER BY Year, Month) * 100.00,2) || '%' AS Order_growth, 
+    Total_cost,
+    -- Tổng lợi nhuận mỗi tháng
+    (TPV - Total_cost) AS Total_profit, 
+    -- Tỷ lệ lợi nhuận trên chi phí mỗi tháng
+    (TPV - Total_cost) / Total_cost * 100 AS Profit_to_cost_ratio
+FROM xx
+ORDER BY Year, Month;
+
+--III.2
 
 
