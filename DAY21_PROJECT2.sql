@@ -65,7 +65,7 @@ order BY age, tag
 /*Trẻ nhất là 12 tuổi ở cả F VÀ M, số lượng 966, trong đó: F = 512, M = 454 
 Lớn nhất là 70 tuổi ở cả F VÀ M, số lượng 981, trong đó: F = 477, M = 504 */
 
---task4: Top 5 sản phẩm mỗi tháng.
+--task4: top 5 sản phẩm có lợi nhuận cao nhất từng tháng (xếp hạng cho từng sản phẩm)
 WITH SALE_TABLE AS (
     SELECT 
         FORMAT_TIMESTAMP('%Y-%m', b.created_at) AS month_year,
@@ -107,7 +107,7 @@ SELECT * FROM (
 )
 WHERE rank_per_month IN (1,2,3,4,5)
 
---task5: Doanh thu tính đến thời điểm hiện tại trên mỗi danh mục
+--task5:  tổng doanh thu theo ngày của từng danh mục sản phẩm (category) trong 3 tháng qua ( giả sử ngày hiện tại là 15/4/2022)
 WITH SALE_DATA AS (
     SELECT 
         FORMAT_TIMESTAMP('%Y-%m-%d', b.created_at) AS dates,
@@ -145,13 +145,11 @@ ORDER BY
 
 --III.1
 WITH x AS (
-    SELECT 
+SELECT 
         FORMAT_TIMESTAMP('%Y-%m', c.created_at) AS Month,
         FORMAT_TIMESTAMP('%Y', c.created_at) AS Year,
         a.category AS Product_category,
-        COUNT(b.product_id) AS TPO, -- Tổng số đơn hàng mỗi category ở từng tháng
-        SUM(b.sale_price) AS TPV, -- Tổng doanh thu mỗi category ở từng tháng
-        SUM(a.cost) AS Total_cost -- Tổng chi phí mỗi category ở từng tháng
+        COUNT(b.product_id) AS TPO -- Tổng số đơn hàng mỗi category ở từng tháng
     FROM 
         bigquery-public-data.thelook_ecommerce.products a
     JOIN 
@@ -163,8 +161,27 @@ WITH x AS (
     WHERE 
         b.status = 'Complete'
     GROUP BY 1, 2, 3
-    ORDER BY Month, Year
-) SELECT
+    ORDER BY Month, Year,Product_category 
+), xx AS(
+SELECT
+    Month,
+    Year,
+    Product_category,
+    ROUND(sum(TPO * b.sale_price),2) AS TPV, -- Tổng doanh thu mỗi category ở từng tháng
+    TPO,
+    ROUND(SUM(TPO * a.cost),2) AS Total_cost -- Tổng chi phí mỗi category ở từng tháng,
+FROM x
+    JOIN bigquery-public-data.thelook_ecommerce.products a
+        ON x.Product_category = a.category
+    JOIN 
+        bigquery-public-data.thelook_ecommerce.order_items b
+        ON a.id = b.product_id
+    WHERE 
+        b.status = 'Complete'
+GROUP BY 1,2,3,5
+ORDER BY Month, Year,Product_category 
+)
+SELECT  
     Month,
     Year,
     Product_category,
@@ -175,12 +192,10 @@ WITH x AS (
     -- Tăng trưởng số đơn hàng
     round((TPO - LAG(TPO) OVER (ORDER BY Year, Month, Product_category)) / LAG(TPO) OVER (ORDER BY Year, Month, Product_category) * 100.00,2) || '%' AS Order_growth, 
     Total_cost,
-    -- Tổng lợi nhuận mỗi tháng
-    (TPV - Total_cost) AS Total_profit, 
-    -- Tỷ lệ lợi nhuận trên chi phí mỗi tháng
-    (TPV - Total_cost) / Total_cost * 100 AS Profit_to_cost_ratio
-FROM x
-ORDER BY Year, Month, Product_category;
+    ROUND((TPV - Total_cost),2) AS Total_profit, -- Tổng lợi nhuận mỗi tháng
+    ROUND(((TPV - Total_cost) / Total_cost * 100.00),2) AS Profit_to_cost_ratio  -- Tỷ lệ lợi nhuận trên chi phí mỗi tháng
+FROM xx
+ORDER BY Year, Month, Product_category
 
 --III.2
 
