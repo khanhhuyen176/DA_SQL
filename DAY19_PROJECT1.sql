@@ -40,7 +40,7 @@ WHERE
 -- 3) Thêm cột CONTACTLASTNAME, CONTACTFIRSTNAME được tách ra từ CONTACTFULLNAME . 
 --Chuẩn hóa CONTACTLASTNAME, CONTACTFIRSTNAME theo định dạng chữ cái đầu tiên viết hoa, chữ cái tiếp theo viết thường. 
 --Gợi ý: ( ADD column sau đó UPDATE)
-ADD TABLE sales_dataset_rfm_prj
+ALTER TABLE sales_dataset_rfm_prj
   ADD COLUMN CONTACTFIRSTNAME varchar(20),
   ADD COLUMN CONTACTLASTNAME varchar(20);
 
