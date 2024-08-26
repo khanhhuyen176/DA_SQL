@@ -121,6 +121,35 @@ FROM filter_data
 WHERE STT = 1;
 --??làm sao để có thể insert hết data bảng ban đầu vào bảng clean mà không phải liệt kê từng cột với trường hợp bảng có quá nhiều trường thì sẽ không khả thi với cách liệt kê??
 --??làm sao để biết cần xóa lặp lại ở cột nào, gom nhóm theo đâu??
+--------------------------------------------------
+--FIX table_clean
+CREATE TABLE public.sales_dataset_rfm_prj_clean AS 
+WITH Z AS (
+    SELECT
+        *,
+        (SELECT AVG(quantityordered) FROM public.sales_dataset_rfm_prj) AS avg,
+        (SELECT STDDEV(quantityordered) FROM public.sales_dataset_rfm_prj) AS stddev
+    FROM public.sales_dataset_rfm_prj
+    WHERE 
+        ORDERNUMBER IS NOT NULL AND
+        QUANTITYORDERED IS NOT NULL AND
+        PRICEEACH IS NOT NULL AND
+        ORDERLINENUMBER IS NOT NULL AND
+        SALES IS NOT NULL AND
+        ORDERDATE IS NOT NULL
+),
+OUTLIER AS (
+    SELECT 
+        ordernumber
+    FROM Z
+    WHERE ABS((quantityordered - avg) / stddev) > 3
+)
+SELECT *
+FROM Z
+WHERE ordernumber NOT IN (
+    SELECT ordernumber
+    FROM OUTLIER
+);
 
 
 
