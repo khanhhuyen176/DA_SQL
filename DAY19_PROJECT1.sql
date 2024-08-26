@@ -65,6 +65,7 @@ SET
         WHEN EXTRACT(MONTH FROM orderdate) BETWEEN 7 AND 9 THEN 3
         WHEN EXTRACT(MONTH FROM orderdate) BETWEEN 10 AND 12 THEN 4
     END;
+--FIX:     QTR_ID = EXTRACT(QUARTER FROM orderdate)::INT;
 
 -- 5) Hãy tìm outlier (nếu có) cho cột QUANTITYORDERED và hãy chọn cách xử lý cho bản ghi đó (2 cách) ( Không chạy câu lệnh trước khi bài được review)
 WITH Z AS (
